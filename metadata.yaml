@@ -13,7 +13,7 @@ provides:
   ganglia:
     interface: monitor
 requires:
-  namenode:
+  hdfs:
     interface: hdfs
   nodemanager:
     interface: nodemanager
