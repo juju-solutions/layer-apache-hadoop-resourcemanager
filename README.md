@@ -4,9 +4,9 @@ The Apache Hadoop software library is a framework that allows for the
 distributed processing of large data sets across clusters of computers
 using a simple programming model.
 
-This charm deploys an HDFS master node running the NameNode component of
-[Apache Hadoop 2.7.1](http://hadoop.apache.org/docs/r2.7.1/), which manages
-the distribution and replication of data among the various DataNode components.
+This charm deploys a node running the ResourceManager component of
+[Apache Hadoop 2.4.1](http://hadoop.apache.org/docs/r2.4.1/),
+which manages the computation resources and job execution for the platform.
 
 ## Usage
 
@@ -27,33 +27,30 @@ included in the bigdata bundles linked above:
     hadoop jar my-job.jar
 
 
-## Status and Smoke Test
+## Upgrading
 
-The services provide extended status reporting to indicate when they are ready:
+This charm includes the hadoop-upgrade action which will download, untar and
+upgrade the hadoop software to the specified version. This should be used in
+conjunction with the hadoop-pre-upgrade and hadoop-post-upgrade actions on the
+namenode (apache-hadoop-hdfs-master) which stops any hadoop related processes on
+the cluster before allowing the upgrade to proceed.
 
-    juju status --format=tabular
+If different
+versions of hadoop are running on related services, the cluster will not
+function correctly.
 
-This is particularly useful when combined with `watch` to track the on-going
-progress of the deployment:
+The rollback param specifies whether to recreate (overwrite)
+the hadoop software or simply recreate the /usr/lib/hadoop symlink.
 
-    watch -n 0.5 juju status --format=tabular
+Syntax for this action is:
 
-The message for each unit will provide information about that unit's state.
-Once they all indicate that they are ready, you can perform a "smoke test"
-to verify that HDFS is working as expected using the built-in `smoke-test`
-action:
+    juju action do datanode/0 hadoop-upgrade version=X.X.X rollback=false
 
-    juju action do smoke-test
+This action will upgrade the unit extended status.
+    You can also get action results with:
 
-After a few seconds or so, you can check the results of the smoke test:
+    juju action fetch --wait 0 action-id
 
-    juju action status
-
-You will see `status: completed` if the smoke test was successful, or
-`status: failed` if it was not.  You can get more information on why it failed
-via:
-
-    juju action fetch <action-id>
 
 
 ## Monitoring
@@ -66,12 +63,12 @@ do **both** of the following (the order does not matter):
 
 For example:
 
-    juju add-relation hdfs-master ganglia:master
-    juju set hdfs-master ganglia_metrics=true
+    juju add-relation yarn-master ganglia:master
+    juju set yarn-master ganglia_metrics=true
 
-Enabling monitoring will issue restart the NameNode and all DataNode components
-on all of the related compute-slaves.  Take care to ensure that there are no
-running jobs when enabling monitoring.
+Enabling monitoring will issue restart the ResourceManager and all NodeManager
+components on all of the related compute-slaves.  Take care to ensure that there
+are no running jobs when enabling monitoring.
 
 
 ## Deploying in Network-Restricted Environments
@@ -122,3 +119,6 @@ directory and serve them all with a single `juju-resources serve` instance.
 - [Apache Hadoop bug trackers](http://hadoop.apache.org/issue_tracking.html)
 - [Apache Hadoop mailing lists](http://hadoop.apache.org/mailing_lists.html)
 - [Apache Hadoop Juju Charm](http://jujucharms.com/?text=hadoop)
+
+
+[Ganglia charm]: http://jujucharms.com/ganglia/

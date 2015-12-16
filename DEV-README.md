@@ -1,39 +1,78 @@
 ## Overview
 
-This charm provides storage resource management for an Apache Hadoop
+This charm provides computation and storage resources for an Apache Hadoop
 deployment, and is intended to be used only as a part of that deployment.
 This document describes how this charm connects to and interacts with the
 other components of the deployment.
 
-Note: This charm is build from a [charm layer][] and a [base layer][].
-Additionally, most of the implementation is handled in a [library][].
-Changes should be made in the appropriate place and then this charm
-should be rebuilt using [charm build][].
-
-[charm layer]: https://github.com/juju-solutions/apache-hadoop-namenode
-[base layer]: https://github.com/juju-solutions/layer-hadoop-base
-[library]: https://github.com/juju-solutions/jujubigdata
-[charm build]: https://jujucharms.com/docs/stable/authors-charm-building
-
 
 ## Provided Relations
 
-### hdfs (interface: [hdfs][])
+### resourcemanager (interface: mapred)
 
-This relation connects this charm to the charms which require a NameNode,
-such as the apache-hadoop-resourcemanager and apache-hadoop-plugin charms.
+This relation connects this charm to the apache-hadoop-plugin charm.
+The relation exchanges the following keys:
 
-Information on this interface can be found at [interface-hdfs][hdfs]
+* Sent to the plugin:
+
+  * `private-address`: Address of this unit, to provide the ResourceManager
+  * `has_slave`: Flag indicating if YARN has at least one NodeManager
+  * `port`: Port where the ResourceManager is listening for YARN operations (IPC)
+  * `historyserver-port`: JobHistory port (IPC)
+
+* Received from the plugin:
+
+  *There are no keys received from the plugin*
+
+To use this interface, it is recommended that you use
+[Charm Helpers](https://pypi.python.org/pypi/charmhelpers) and the relation
+class provided in the
+[Juju Big Data library](https://pypi.python.org/pypi/jujubigdata):
+
+    from charmhelpers.core import unitdata
+    from jujubigdata.relations import ResourceManager
+
+    resourcemanager = ResourceManager()
+    if resourcemanager.is_ready():
+        rm_units = unitdata.kv.get('relations.ready')['resourcemanager']
+        rm_data = rm_units.values()[0]
+        print rm_data['private-address']
 
 
-### ganglia (interface: [monitor][])
+## Required Relations
 
-This relation connects this charm to the [Ganglia][] charm for monitoring. 
-Information on this interface can be found at [interface-monitor][monitor]
+### namenode (interface: dfs)
 
-[hdfs]: https://github.com/juju-solutions/interface-hdfs
-[monitor]: https://github.com/juju-solutions/interface-monitor
-[Ganglia]: https://jujucharms.com/ganglia/
+This relation connects this charm to the apache-hadoop-hdfs-master charm.
+The relation exchanges the following keys:
+
+* Sent to hdfs-master:
+
+  *There are no keys sent to hdfs-master*
+
+* Received from hdfs-master:
+
+  * `private-address`: Address of the HDFS master unit, to provide the NameNode
+  * `has_slave`: Flag indicating if HDFS has at least one DataNode
+  * `port`: Port where the NameNode is listening for HDFS operations (IPC)
+  * `webhdfs-port`: Port for the NameNode web interface
+
+
+### nodemanager (interface: mapred-slave)
+
+This relation connects this charm to the apache-hadoop-compute-slave charm.
+The relation exchanges the following keys:
+
+* Sent to compute-slave:
+
+  * `private-address`: Address of the YARN master unit, to provide the ResourceManager
+  * `has_slave`: Flag indicating if YARN has at least one NodeManager
+  * `port`: Port where the ResourceManager is listening for YARN operations (IPC)
+  * `historyserver-port`: JobHistory port (IPC)
+
+* Received from compute-slave:
+
+  * `private-address`: Address of the remote unit, to be registered as a NodeManager
 
 
 ## Manual Deployment

@@ -1,8 +1,16 @@
-start-hdfs:
-    description: All of the HDFS processes can be started with this Juju action.
-stop-hdfs:
-    description: All of the HDFS processes can be stopped with this Juju action.
-restart-hdfs:
-    description: All of the HDFS processes can be restarted with this Juju action.
-smoke-test:
-    description: Verify that HDFS is working by creating and removing a small file.
+start-yarn:
+    description: All of the YARN processes can be started with this Juju action.
+stop-yarn:
+    description: All of the YARN processes can be stopped with this Juju action.
+restart-yarn:
+    description: All of the YARN processes can be restarted with this Juju action.
+hadoop-upgrade:
+  description: upgrade (or roll back) hadoop to specified version
+  params:
+    version:
+      type: string
+      description: destination hadoop version X.X.X
+    rollback:
+      type: boolean 
+      description: true or false - defaults to false
+  required: [version, rollback]

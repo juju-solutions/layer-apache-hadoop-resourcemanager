@@ -1,14 +1,19 @@
-name: apache-hadoop-namenode
-summary: HDFS master (NameNode) for Apache Hadoop platform
+name: apache-hadoop-resourcemanager
+summary: YARN master (ResourceManager) for Apache Hadoop platform
 maintainer: bigdata-dev <bigdata-dev@canonical.com>
 description: >
   Hadoop is a software platform that lets one easily write and
   run applications that process vast amounts of data.
 
-  This charm manages the HDFS master node (NameNode).
+  This charm manages the YARN master node (ResourceManager).
 tags: ["applications", "bigdata", "hadoop", "apache"]
 provides:
-  hdfs:
-    interface: hdfs
+  resourcemanager:
+    interface: mapred 
   ganglia:
     interface: monitor
+requires:
+  namenode:
+    interface: hdfs
+  nodemanager:
+    interface: nodemanager
