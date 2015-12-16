@@ -11,11 +11,10 @@ from charmhelpers.core import hookenv, unitdata
 def configure_resourcemanager():
     hadoop = get_hadoop_base()
     yarn = YARN(hadoop)
-    hdfs = HDFS(hadoop)
-    hdfs.configure_client()
+    #hdfs = HDFS(hadoop)
+    #hdfs.configure_client()
     yarn.configure_resourcemanager()
     yarn.configure_jobhistory()
-    yarn.register_slaves()
     yarn.start_resourcemanager()
     yarn.start_jobhistory()
     hadoop.open_ports('resourcemanager')
@@ -25,7 +24,7 @@ def configure_resourcemanager():
 @when('resourcemanager.started')
 @when_not('nodemanager.related')
 def blocked():
-    hookenv.status_set('blocked', 'Waiting for DataNodes')
+    hookenv.status_set('blocked', 'Waiting for NodeManagers')
 
 
 @when('resourcemanager.started', 'nodemanager.related')
@@ -67,7 +66,7 @@ def register_nodemanagers(nodemanager):
     set_state('resourcemanager.ready')
   
   
-@when('namenode.related')
+@when('hdfs.related')
 @when('nodemanager.ready')
 def accept_clients(clients):
     hadoop = get_hadoop_base()
@@ -83,8 +82,8 @@ def accept_clients(clients):
     clients.send_ready(True)
 
 
-@when('namenode.related')
-@when_not('namenode.ready')
+@when('hdfs.related')
+@when_not('hdfs.ready')
 def reject_clients(clients):
     clients.send_ready(False)
 
