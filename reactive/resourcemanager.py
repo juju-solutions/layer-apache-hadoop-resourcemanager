@@ -1,7 +1,7 @@
 from charms.reactive import when, when_not, set_state, remove_state
 from charms.hadoop import get_hadoop_base
 from charms.reactive.helpers import data_changed
-from jujubigdata.handlers import YARN
+from jujubigdata.handlers import YARN, HDFS
 from jujubigdata import utils
 from charmhelpers.core import hookenv, unitdata
 
@@ -14,8 +14,6 @@ def configure_resourcemanager():
     ip_addr = utils.resolve_private_address(private_address)
     hadoop = get_hadoop_base()
     yarn = YARN(hadoop)
-    #hdfs = HDFS(hadoop)
-    #hdfs.configure_client()
     yarn.configure_resourcemanager()
     yarn.configure_jobhistory()
     yarn.start_resourcemanager()
@@ -45,7 +43,7 @@ def send_info(nodemanager):
     nodemanager.send_spec(hadoop.spec())
     nodemanager.send_host(local_hostname)
     nodemanager.send_ports(resourcemanager_port, hs_http, hs_ipc)
-    nodemanager.send_ssh_key(utils.get_ssh_key('ubuntu'))
+    nodemanager.send_ssh_key(utils.get_ssh_key('hdfs'))
     nodemanager.send_hosts_map(utils.get_kv_hosts())
 
 
@@ -58,7 +56,9 @@ def waiting(nodemanager):
 @when('resourcemanager.started', 'nodemanager.registered')
 def register_nodemanagers(nodemanager):
     hadoop = get_hadoop_base()
+    hdfs = HDFS(hadoop)
     yarn = YARN(hadoop)
+    #hdfs.configure_client()
 
     slaves = [node['host'] for node in nodemanager.nodes()]
     if data_changed('resourcemanager.slaves', slaves):
@@ -72,7 +72,22 @@ def register_nodemanagers(nodemanager):
     set_state('resourcemanager.ready')
 
 
-@when('hdfs.related')
+@when('hdfs.ready')
+def configure_hdfs(namenode):
+    hadoop = get_hadoop_base()
+    hdfs = HDFS(hadoop)
+    hdfs.configure_datanode(namenode.host(), namenode.port())
+    # utils.install_ssh_key('ubuntu', namenode.ssh_key())
+    utils.update_kv_hosts(namenode.hosts_map())
+    utils.manage_etc_hosts()
+    # hdfs.start_datanode()
+    # namenode.register()
+    # hadoop.open_ports('datanode')
+    # set_state('datanode.started')
+    # hookenv.status_set('active', 'Ready')
+
+
+@when('hdfs.ready')
 @when('nodemanager.ready')
 def accept_clients(clients):
     hadoop = get_hadoop_base()
