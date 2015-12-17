@@ -16,7 +16,6 @@ def configure_resourcemanager():
     yarn = YARN(hadoop)
     yarn.configure_resourcemanager()
     yarn.configure_jobhistory()
-    yarn.start_resourcemanager()
     yarn.start_jobhistory()
     hadoop.open_ports('resourcemanager')
     utils.update_kv_hosts({ip_addr: local_hostname})
@@ -80,15 +79,16 @@ def configure_hdfs(namenode):
     # utils.install_ssh_key('ubuntu', namenode.ssh_key())
     utils.update_kv_hosts(namenode.hosts_map())
     utils.manage_etc_hosts()
+    yarn.start_resourcemanager()
     # hdfs.start_datanode()
     # namenode.register()
     # hadoop.open_ports('datanode')
-    # set_state('datanode.started')
+    set_state('resourcemanager.hdfs.configure')
     # hookenv.status_set('active', 'Ready')
 
 
-@when('hdfs.ready')
-@when('nodemanager.ready')
+#@when('hdfs.ready')
+@when('resourcemanager.ready')
 def accept_clients(clients):
     hadoop = get_hadoop_base()
     private_address = hookenv.unit_get('private-address')
