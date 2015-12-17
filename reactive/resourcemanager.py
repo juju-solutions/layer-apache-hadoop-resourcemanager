@@ -76,7 +76,7 @@ def register_nodemanagers(nodemanager):
 def configure_hdfs(namenode):
     hadoop = get_hadoop_base()
     hdfs = HDFS(hadoop)
-    hdfs.configure_datanode(namenode.host(), namenode.port())
+    hdfs.configure_client(namenode.host(), namenode.port())
     # utils.install_ssh_key('ubuntu', namenode.ssh_key())
     utils.update_kv_hosts(namenode.hosts_map())
     utils.manage_etc_hosts()
