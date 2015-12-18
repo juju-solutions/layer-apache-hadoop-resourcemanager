@@ -19,10 +19,9 @@ def configure_resourcemanager():
     yarn.start_jobhistory()
     hadoop.open_ports('resourcemanager')
     utils.update_kv_hosts({ip_addr: local_hostname})
-    set_state('resourcemanager.started')
 
 
-@when('resourcemanager.started')
+#@when('resourcemanager.started')
 @when_not('nodemanager.related')
 def blocked():
     hookenv.status_set('blocked', 'Waiting for NodeManagers')
@@ -32,7 +31,7 @@ def blocked():
 def send_info(nodemanager):
     hadoop = get_hadoop_base()
     local_hostname = hookenv.local_unit().replace('/', '-')
-    resourcemanager_port = hadoop.dist_config.port('resourcemanager')
+    port = hadoop.dist_config.port('resourcemanager')
     hs_http = hadoop.dist_config.port('jh_webapp_http')
     hs_ipc = hadoop.dist_config.port('jobhistory')
 
@@ -41,7 +40,7 @@ def send_info(nodemanager):
 
     nodemanager.send_spec(hadoop.spec())
     nodemanager.send_host(local_hostname)
-    nodemanager.send_ports(resourcemanager_port, hs_http, hs_ipc)
+    nodemanager.send_ports(port, hs_http, hs_ipc)
     nodemanager.send_ssh_key(utils.get_ssh_key('hdfs'))
     nodemanager.send_hosts_map(utils.get_kv_hosts())
 
@@ -51,11 +50,15 @@ def send_info(nodemanager):
 def waiting(nodemanager):
     hookenv.status_set('waiting', 'Waiting for NodeManagers')
 
+@when('nodemanager.related')
+@when_not('hdfs.related')
+def waiting(hdfs):
+    hookenv.status_set('waiting', 'Waiting for relation to HDFS')
+
 
 @when('resourcemanager.started', 'nodemanager.registered')
 def register_nodemanagers(nodemanager):
     hadoop = get_hadoop_base()
-    hdfs = HDFS(hadoop)
     yarn = YARN(hadoop)
     #hdfs.configure_client()
 
@@ -70,43 +73,40 @@ def register_nodemanagers(nodemanager):
     ))
     set_state('resourcemanager.ready')
 
-
-@when('hdfs.ready')
-def configure_hdfs(namenode):
-    hadoop = get_hadoop_base()
-    hdfs = HDFS(hadoop)
-    hdfs.configure_client(namenode.host(), namenode.port())
-    # utils.install_ssh_key('ubuntu', namenode.ssh_key())
-    utils.update_kv_hosts(namenode.hosts_map())
-    utils.manage_etc_hosts()
-    yarn.start_resourcemanager()
-    # hdfs.start_datanode()
-    # namenode.register()
-    # hadoop.open_ports('datanode')
-    set_state('resourcemanager.hdfs.configure')
-    # hookenv.status_set('active', 'Ready')
-
-
-#@when('hdfs.ready')
+@when('yarn.related')
 @when('resourcemanager.ready')
 def accept_clients(clients):
     hadoop = get_hadoop_base()
     private_address = hookenv.unit_get('private-address')
     ip_addr = utils.resolve_private_address(private_address)
-    resourcemanager_port = hadoop.dist_config.port('resourcemanager')
-    hs_http = hadoop.dist_config.port('jh_webapp_http')
-    hs_ipc = hadoop.dist_config.port('jobhistory')
+    port = hadoop.dist_config.port('resourcemanager')
+    hs_http = hadoop.dist_config.port('hs_http')
+    hs_ipc = hadoop.dist_config.port('hs_ipc')
 
     clients.send_spec(hadoop.spec())
     clients.send_ip_addr(ip_addr)
-    clients.send_ports(resourcemanager_port, hs_http, hs_ipc)
+    clients.send_ports(port, hs_http, hs_ipc)
     clients.send_ready(True)
 
 
-@when('hdfs.related')
+@when('yarn.related')
 @when_not('resourcemanager.ready')
 def reject_clients(clients):
     clients.send_ready(False)
+
+
+@when('namenode.ready')
+@when_not('resourcemanager.started')
+def configure_hdfs(namenode):
+    hadoop = get_hadoop_base()
+    hdfs = HDFS(hadoop)
+    yarn = YARN(hadoop)
+    hdfs.configure_client(namenode.host(), namenode.port())
+    utils.update_kv_hosts(namenode.hosts_map())
+    utils.manage_etc_hosts()
+    yarn.start_resourcemanager()
+    set_state('resourcemanager.started')
+    set_state('resourcemanager.hdfs.configure')
 
 
 @when('resourcemanager.started', 'nodemanager.departing')
