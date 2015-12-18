@@ -1,4 +1,4 @@
-from charms.reactive import when, when_not, set_state, remove_state
+from charms.reactive import when, when_not, set_state, remove_state, when_none
 from charms.hadoop import get_hadoop_base
 from charms.reactive.helpers import data_changed
 from jujubigdata.handlers import YARN, HDFS
@@ -7,7 +7,7 @@ from charmhelpers.core import hookenv, unitdata
 
 
 @when('hadoop.installed')
-@when_not('resourcemanager.started')
+@when_not('resourcemanager.configured')
 def configure_resourcemanager():
     local_hostname = hookenv.local_unit().replace('/', '-')
     private_address = hookenv.unit_get('private-address')
@@ -19,12 +19,42 @@ def configure_resourcemanager():
     yarn.start_jobhistory()
     hadoop.open_ports('resourcemanager')
     utils.update_kv_hosts({ip_addr: local_hostname})
+    set_state('resourcemanager.configured')
 
 
-#@when('resourcemanager.started')
+@when('hdfs.related')
 @when_not('nodemanager.related')
-def blocked():
-    hookenv.status_set('blocked', 'Waiting for NodeManagers')
+def blockednodemanager(hdfs):
+    hookenv.status_set('blocked', 'Waiting for relation to NodeManager')
+
+
+@when('nodemanager.related')
+@when_not('hdfs.related')
+def blockedhdfs(hdfs):
+    hookenv.status_set('blocked', 'Waiting for relation to HDFS')
+
+
+@when_none('nodemanager.related', 'hdfs.related')
+def blockedboth():
+    hookenv.status_set('blocked', 'Waiting for relation to NodeManager and HDFS')
+
+
+@when('nodemanager.related', 'hdfs.ready')
+@when_not('nodemanager.registered')
+def waitingnodemanager(nodemanager, hdfs):
+    hookenv.status_set('waiting', 'Waiting for NodeManager registration')
+
+
+@when('nodemanager.registered')
+@when_not('hdfs.ready')
+def waitinghdfs(nodemanager):
+    hookenv.status_set('waiting', 'Waiting for HDFS Ready')
+
+
+@when('nodemanager.related', 'hdfs.related')
+@when_none('hdfs.ready', 'nodemanager.registered')
+def waitingboth(nodemanager, hdfs):
+    hookenv.status_set('waiting', 'Waiting for HDFS Ready and NodeManager Registration')
 
 
 @when('resourcemanager.started', 'nodemanager.related')
@@ -45,22 +75,10 @@ def send_info(nodemanager):
     nodemanager.send_hosts_map(utils.get_kv_hosts())
 
 
-@when('resourcemanager.started', 'nodemanager.related')
-@when_not('nodemanager.registered')
-def waiting(nodemanager):
-    hookenv.status_set('waiting', 'Waiting for NodeManagers')
-
-@when('nodemanager.related')
-@when_not('hdfs.related')
-def waiting(hdfs):
-    hookenv.status_set('waiting', 'Waiting for relation to HDFS')
-
-
 @when('resourcemanager.started', 'nodemanager.registered')
 def register_nodemanagers(nodemanager):
     hadoop = get_hadoop_base()
     yarn = YARN(hadoop)
-    #hdfs.configure_client()
 
     slaves = [node['host'] for node in nodemanager.nodes()]
     if data_changed('resourcemanager.slaves', slaves):
@@ -73,8 +91,7 @@ def register_nodemanagers(nodemanager):
     ))
     set_state('resourcemanager.ready')
 
-@when('yarn.related')
-@when('resourcemanager.ready')
+@when('yarn.related', 'resourcemanager.ready')
 def accept_clients(clients):
     hadoop = get_hadoop_base()
     private_address = hookenv.unit_get('private-address')
@@ -95,18 +112,31 @@ def reject_clients(clients):
     clients.send_ready(False)
 
 
-@when('namenode.ready')
+@when('hdfs.ready')
 @when_not('resourcemanager.started')
-def configure_hdfs(namenode):
+def configure_hdfs(hdfs_rel):
     hadoop = get_hadoop_base()
     hdfs = HDFS(hadoop)
     yarn = YARN(hadoop)
-    hdfs.configure_client(namenode.host(), namenode.port())
-    utils.update_kv_hosts(namenode.hosts_map())
+    # FIX HARDCODED HOSTNAME 'NAMENODE'
+    utils.update_kv_hosts({hdfs_rel.ip_addr(): 'namenode'})
     utils.manage_etc_hosts()
+    # FIX THE NEXT LINE ONCE CORY FIXES HIS FIX
+    #hdfs.configure_client('namenode', hdfs_rel.port())
+    hdfs.configure_hdfs_base('namenode', hdfs_rel.port())
     yarn.start_resourcemanager()
     set_state('resourcemanager.started')
-    set_state('resourcemanager.hdfs.configure')
+
+
+@when('resourcemanager.started')
+@when_not('hdfs.ready')
+def hdfs_departed():
+    hadoop = get_hadoop_base()
+    yarn = YARN(hadoop)
+    hadoop.close_ports('resourcemanager')
+    yarn.stop_resourcemanager()
+    remove_state('resourcemanager.started')
+    remove_state('resourcemanager.ready')
 
 
 @when('resourcemanager.started', 'nodemanager.departing')
@@ -127,5 +157,4 @@ def unregister_nodemanager(nodemanager):
     utils.manage_etc_hosts()
 
     if not slaves_remaining:
-        hookenv.status_set('blocked', 'Waiting for relation to NodeManagers')
         remove_state('resourcemanager.ready')
