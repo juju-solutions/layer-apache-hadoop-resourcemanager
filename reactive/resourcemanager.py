@@ -17,7 +17,6 @@ def configure_resourcemanager():
     yarn.configure_resourcemanager()
     yarn.configure_jobhistory()
     yarn.start_jobhistory()
-    hadoop.open_ports('resourcemanager')
     utils.update_kv_hosts({ip_addr: local_hostname})
     set_state('resourcemanager.configured')
 
@@ -126,6 +125,7 @@ def configure_hdfs(hdfs_rel):
     #hdfs.configure_client('namenode', hdfs_rel.port())
     hdfs.configure_hdfs_base('namenode', hdfs_rel.port())
     yarn.start_resourcemanager()
+    hadoop.open_ports('resourcemanager')
     set_state('resourcemanager.started')
 
 
