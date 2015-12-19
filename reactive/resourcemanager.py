@@ -17,7 +17,6 @@ def configure_resourcemanager():
     yarn.configure_resourcemanager()
     yarn.configure_jobhistory()
     yarn.start_jobhistory()
-    hadoop.open_ports('resourcemanager')
     utils.update_kv_hosts({ip_addr: local_hostname})
     set_state('resourcemanager.configured')
 
@@ -45,7 +44,7 @@ def waitingnodemanager(nodemanager, hdfs):
     hookenv.status_set('waiting', 'Waiting for NodeManager registration')
 
 
-@when('nodemanager.registered')
+@when('nodemanager.registered', 'hdfs.related')
 @when_not('hdfs.ready')
 def waitinghdfs(nodemanager):
     hookenv.status_set('waiting', 'Waiting for HDFS Ready')
@@ -91,6 +90,7 @@ def register_nodemanagers(nodemanager):
     ))
     set_state('resourcemanager.ready')
 
+
 @when('yarn.related', 'resourcemanager.ready')
 def accept_clients(clients):
     hadoop = get_hadoop_base()
@@ -125,6 +125,7 @@ def configure_hdfs(hdfs_rel):
     #hdfs.configure_client('namenode', hdfs_rel.port())
     hdfs.configure_hdfs_base('namenode', hdfs_rel.port())
     yarn.start_resourcemanager()
+    hadoop.open_ports('resourcemanager')
     set_state('resourcemanager.started')
 
 
@@ -145,7 +146,7 @@ def unregister_nodemanager(nodemanager):
     yarn = YARN(hadoop)
     nodes_leaving = nodemanager.nodes()  # only returns nodes in "leaving" state
 
-    slaves = unitdata.kv().get('nodemanager.slaves')
+    slaves = unitdata.kv().get('nodemanager.slaves', [])
     slaves_leaving = [node['host'] for node in nodes_leaving]
     hookenv.log('Slaves leaving: {}'.format(slaves_leaving))
 
@@ -153,8 +154,10 @@ def unregister_nodemanager(nodemanager):
     unitdata.kv().set('resourcemanager.slaves', slaves_remaining)
     yarn.register_slaves(slaves_remaining)
 
-    utils.remove_kv_hosts({node['ip']: node['host'] for node in nodes_leaving})
+    utils.remove_kv_hosts(slaves_leaving)
     utils.manage_etc_hosts()
 
     if not slaves_remaining:
         remove_state('resourcemanager.ready')
+
+    nodemanager.dismiss()
