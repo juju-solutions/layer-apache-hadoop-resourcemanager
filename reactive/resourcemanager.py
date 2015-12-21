@@ -21,35 +21,41 @@ def configure_resourcemanager():
     set_state('resourcemanager.configured')
 
 
+@when('resourcemanager.configured')
 @when('hdfs.related')
 @when_not('nodemanager.related')
 def blockednodemanager(hdfs):
     hookenv.status_set('blocked', 'Waiting for relation to NodeManager')
 
 
+@when('resourcemanager.configured')
 @when('nodemanager.related')
 @when_not('hdfs.related')
 def blockedhdfs(hdfs):
     hookenv.status_set('blocked', 'Waiting for relation to HDFS')
 
 
+@when('resourcemanager.configured')
 @when_none('nodemanager.related', 'hdfs.related')
 def blockedboth():
     hookenv.status_set('blocked', 'Waiting for relation to NodeManager and HDFS')
 
 
+@when('resourcemanager.configured')
 @when('nodemanager.related', 'hdfs.ready')
 @when_not('nodemanager.registered')
 def waitingnodemanager(nodemanager, hdfs):
     hookenv.status_set('waiting', 'Waiting for NodeManager registration')
 
 
+@when('resourcemanager.configured')
 @when('nodemanager.registered', 'hdfs.related')
 @when_not('hdfs.ready')
-def waitinghdfs(nodemanager):
+def waitinghdfs(nodemanager, hdfs):
     hookenv.status_set('waiting', 'Waiting for HDFS Ready')
 
 
+@when('resourcemanager.configured')
 @when('nodemanager.related', 'hdfs.related')
 @when_none('hdfs.ready', 'nodemanager.registered')
 def waitingboth(nodemanager, hdfs):
@@ -112,7 +118,20 @@ def reject_clients(clients):
     clients.send_ready(False)
 
 
-@when('hdfs.ready')
+@when('hdfs.related', 'hadoop.installed')
+def set_spec(hdfs):
+    hadoop = get_hadoop_base()
+    hdfs.set_spec(hadoop.spec())
+
+
+@when('hdfs.spec.mismatch', 'hadoop.installed')
+def spec_mismatch(hdfs):
+    hookenv.status_set('blocked',
+                       'Spec mismatch with HDFS: {} != {}'.format(
+                           hdfs.local_spec(), hdfs.hdfs_spec()))
+
+
+@when('hdfs.ready', 'resourcemanager.configured')
 @when_not('resourcemanager.started')
 def configure_hdfs(hdfs_rel):
     hadoop = get_hadoop_base()
