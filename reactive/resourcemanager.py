@@ -1,7 +1,8 @@
+# pylint: disable=unused-argument
 from charms.reactive import when, when_not, set_state, remove_state, when_none
 from charms.hadoop import get_hadoop_base
 from charms.reactive.helpers import data_changed
-from jujubigdata.handlers import YARN, HDFS
+from jujubigdata.handlers import YARN
 from jujubigdata import utils
 from charmhelpers.core import hookenv, unitdata
 
@@ -74,7 +75,7 @@ def send_info(nodemanager):
     utils.manage_etc_hosts()
 
     nodemanager.send_spec(hadoop.spec())
-    nodemanager.send_host(local_hostname)
+    nodemanager.send_resourcemanagers([local_hostname])
     nodemanager.send_ports(port, hs_http, hs_ipc)
     nodemanager.send_ssh_key(utils.get_ssh_key('hdfs'))
     nodemanager.send_hosts_map(utils.get_kv_hosts())
@@ -100,6 +101,7 @@ def register_nodemanagers(nodemanager):
 @when('yarn.related', 'resourcemanager.ready')
 def accept_clients(clients):
     hadoop = get_hadoop_base()
+    local_hostname = hookenv.local_unit().replace('/', '-')
     private_address = hookenv.unit_get('private-address')
     ip_addr = utils.resolve_private_address(private_address)
     port = hadoop.dist_config.port('resourcemanager')
@@ -107,8 +109,9 @@ def accept_clients(clients):
     hs_ipc = hadoop.dist_config.port('hs_ipc')
 
     clients.send_spec(hadoop.spec())
-    clients.send_ip_addr(ip_addr)
+    clients.send_resourcemanagers([local_hostname])
     clients.send_ports(port, hs_http, hs_ipc)
+    clients.send_hosts_map({ip_addr: local_hostname})
     clients.send_ready(True)
 
 
@@ -118,31 +121,12 @@ def reject_clients(clients):
     clients.send_ready(False)
 
 
-@when('hdfs.related', 'hadoop.installed')
-def set_spec(hdfs):
-    hadoop = get_hadoop_base()
-    hdfs.set_spec(hadoop.spec())
-
-
-@when('hdfs.spec.mismatch', 'hadoop.installed')
-def spec_mismatch(hdfs):
-    hookenv.status_set('blocked',
-                       'Spec mismatch with HDFS: {} != {}'.format(
-                           hdfs.local_spec(), hdfs.hdfs_spec()))
-
-
-@when('hdfs.ready', 'resourcemanager.configured')
+@when('hdfs.ready', 'hadoop.hdfs.configured')
+@when('resourcemanager.configured')
 @when_not('resourcemanager.started')
 def configure_hdfs(hdfs_rel):
     hadoop = get_hadoop_base()
-    hdfs = HDFS(hadoop)
     yarn = YARN(hadoop)
-    # FIX HARDCODED HOSTNAME 'NAMENODE'
-    utils.update_kv_hosts({hdfs_rel.ip_addr(): 'namenode'})
-    utils.manage_etc_hosts()
-    # FIX THE NEXT LINE ONCE CORY FIXES HIS FIX
-    #hdfs.configure_client('namenode', hdfs_rel.port())
-    hdfs.configure_hdfs_base('namenode', hdfs_rel.port())
     yarn.start_resourcemanager()
     hadoop.open_ports('resourcemanager')
     set_state('resourcemanager.started')
