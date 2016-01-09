@@ -105,8 +105,8 @@ def accept_clients(clients):
     private_address = hookenv.unit_get('private-address')
     ip_addr = utils.resolve_private_address(private_address)
     port = hadoop.dist_config.port('resourcemanager')
-    hs_http = hadoop.dist_config.port('hs_http')
-    hs_ipc = hadoop.dist_config.port('hs_ipc')
+    hs_http = hadoop.dist_config.port('jh_webapp_http')
+    hs_ipc = hadoop.dist_config.port('jobhistory')
 
     clients.send_spec(hadoop.spec())
     clients.send_resourcemanagers([local_hostname])
