@@ -1,4 +1,4 @@
-includes: ['layer:hadoop-base', 'interface:hdfs', 'interface:nodemanager', 'interface:yarn']
+includes: ['layer:hadoop-base', 'interface:dfs', 'interface:mapred', 'interface:mapred-slave']
 options:
   hadoop-base:
     ports:
