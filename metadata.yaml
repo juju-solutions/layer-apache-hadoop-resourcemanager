@@ -8,12 +8,12 @@ description: >
   This charm manages the YARN master node (ResourceManager).
 tags: ["applications", "bigdata", "hadoop", "apache"]
 provides:
-  yarn:
-    interface: yarn 
+  resourcemanager:
+    interface: mapred
   ganglia:
     interface: monitor
 requires:
-  hdfs:
-    interface: hdfs
+  namenode:
+    interface: dfs
   nodemanager:
-    interface: nodemanager
+    interface: mapred-slave
