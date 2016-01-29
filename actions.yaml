@@ -11,6 +11,44 @@ hadoop-upgrade:
       type: string
       description: destination hadoop version X.X.X
     rollback:
-      type: boolean 
+      type: boolean
       description: true or false - defaults to false
   required: [version, rollback]
+teragen:
+    description: Generate data with teragen
+    params:
+        size:
+            description: The number of 100 byte rows, default to 1GB of data to generate
+            type: string
+            default: "10000000"
+        indir:
+            description: HDFS directory where generated data is stored
+            type: string
+            default: 'tera_demo_in'
+terasort:
+    description: Runs teragen to generate sample data, and then runs terasort to sort that data
+    params:
+        indir:
+            description: HDFS directory where generated data is stored
+            type: string
+            default: 'tera_demo_in'
+        outdir:
+            description: HDFS directory where sorted data is stored
+            type: string
+            default: 'tera_demo_out'
+        size:
+            description: The number of 100 byte rows, default to 1GB of data to generate and sort
+            type: string
+            default: "10000000"
+        maps:
+            description: The default number of map tasks per job. 1-20
+            type: integer
+            default: 1
+        reduces:
+            description: The default number of reduce tasks per job. Typically set to 99% of the cluster's reduce capacity, so that if a node fails the reduces can still be executed in a single wave. Try 1-20
+            type: integer
+            default: 1
+        numtasks:
+            description: How many tasks to run per jvm. If set to -1, there is no limit.
+            type: integer
+            default: 1
