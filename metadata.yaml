@@ -12,6 +12,8 @@ provides:
     interface: mapred
   ganglia:
     interface: monitor
+  benchmark:
+    interface: benchmark
 requires:
   namenode:
     interface: dfs

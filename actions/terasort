@@ -1,0 +1,50 @@
+#!/bin/bash
+set -ex
+IN_DIR=`action-get indir`
+OUT_DIR=`action-get outdir`
+SIZE=`action-get size`
+OPTIONS=''
+
+MAPS=`action-get maps`
+REDUCES=`action-get reduces`
+NUMTASKS=`action-get numtasks`
+
+OPTIONS="${OPTIONS} -D mapreduce.job.maps=${MAPS}"
+OPTIONS="${OPTIONS} -D mapreduce.job.reduces=${REDUCES}"
+OPTIONS="${OPTIONS} -D mapreduce.job.jvm.numtasks=${NUMTASKS}"
+
+# create dir to store results
+RUN=`date +%s`
+RESULT_DIR=/opt/terasort-results
+RESULT_LOG=${RESULT_DIR}/${RUN}.log
+mkdir -p ${RESULT_DIR}
+chown -R ubuntu:ubuntu ${RESULT_DIR}
+
+# clean out any previous data (must be run as ubuntu)
+su ubuntu << EOF
+if hadoop fs -stat ${IN_DIR} &> /dev/null; then
+    hadoop fs -rm -r -skipTrash ${IN_DIR} || true
+fi
+if hadoop fs -stat ${OUT_DIR} &> /dev/null; then
+    hadoop fs -rm -r -skipTrash ${OUT_DIR} || true
+fi
+EOF
+
+benchmark-start
+START=`date +%s`
+# NB: Escaped vars in the block below (e.g., \${HADOOP_HOME}) come from
+# /etc/environment while non-escaped vars (e.g., ${IN_DIR}) are parameterized
+# from this outer scope
+su ubuntu << EOF
+. /etc/environment
+echo 'generating data'
+hadoop jar \${HADOOP_HOME}/share/hadoop/mapreduce/hadoop-mapreduce-examples*.jar teragen ${SIZE} ${IN_DIR} &>/dev/null
+echo 'sorting data'
+hadoop jar \${HADOOP_HOME}/share/hadoop/mapreduce/hadoop-mapreduce-examples*.jar terasort ${OPTIONS} ${IN_DIR} ${OUT_DIR} &> ${RESULT_LOG}
+EOF
+STOP=`date +%s`
+benchmark-finish
+
+`cat ${RESULT_LOG} | $CHARM_DIR/actions/parseTerasort.py`
+DURATION=`expr $STOP - $START`
+benchmark-composite "${DURATION}" 'secs' 'asc'

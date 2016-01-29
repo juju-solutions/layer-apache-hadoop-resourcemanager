@@ -144,3 +144,8 @@ def unregister_nodemanager(nodemanager):
         remove_state('resourcemanager.ready')
 
     nodemanager.dismiss()
+
+
+@when('benchmark.related')
+def register_benchmarks(benchmark):
+    benchmark.register('teragen', 'terasort')
