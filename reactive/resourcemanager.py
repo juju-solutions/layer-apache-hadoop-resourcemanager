@@ -133,7 +133,7 @@ def unregister_nodemanager(nodemanager):
     slaves_leaving = [node['host'] for node in nodes_leaving]
     hookenv.log('Slaves leaving: {}'.format(slaves_leaving))
 
-    slaves_remaining = list(set(slaves) ^ set(slaves_leaving))
+    slaves_remaining = list(set(slaves) - set(slaves_leaving))
     unitdata.kv().set('resourcemanager.slaves', slaves_remaining)
     yarn.register_slaves(slaves_remaining)
 
