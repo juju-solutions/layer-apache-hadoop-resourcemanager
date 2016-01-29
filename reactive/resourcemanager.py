@@ -129,7 +129,7 @@ def unregister_nodemanager(nodemanager):
     yarn = YARN(hadoop)
     nodes_leaving = nodemanager.nodes()  # only returns nodes in "leaving" state
 
-    slaves = unitdata.kv().get('nodemanager.slaves', [])
+    slaves = unitdata.kv().get('resourcemanager.slaves', [])
     slaves_leaving = [node['host'] for node in nodes_leaving]
     hookenv.log('Slaves leaving: {}'.format(slaves_leaving))
 
