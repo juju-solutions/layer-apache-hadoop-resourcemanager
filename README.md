@@ -71,7 +71,7 @@ You can perform a terasort benchmark, in order to gauge performance of your envi
           enqueued: 2015-05-28 20:53:41 +0000 UTC
           started: 2015-05-28 20:53:44 +0000 UTC 
 
-You can also perform a mapreduce benchmark (mrbench) for smaller jobs which relies less on HDFS:
+You can also perform a mapreduce benchmark (mrbench) which relies less on HDFS:
         
         $ juju action do apache-hadoop-resourcemanager/0 mrbench
         Action queued with id: b64bc0ea-60af-4f28-8712-a1927926658a
