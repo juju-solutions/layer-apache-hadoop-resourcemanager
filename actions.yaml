@@ -14,6 +14,34 @@ hadoop-upgrade:
       type: boolean
       description: true or false - defaults to false
   required: [version, rollback]
+mrbench:
+    description: Mapreduce benchmark for small jobs
+    params:
+        basedir:
+            description: DFS working directory
+            type: string
+            default: "/benchmarks/mrbench"
+        numruns:
+            description: Number of times to run the job
+            type: integer
+            default: 1
+        maps:
+            description: number of maps for each run
+            type: integer
+            default: 2
+        reduces:
+            description: number of reduces for each run
+            type: integer
+            default: 1
+        inputlines:
+            description: number of input lines to generate
+            type: integer
+            default: 1
+        inputtype:
+            description: type of input to generate
+            type: string
+            default: "ascending"
+            enum: [ascending,descending,random]
 teragen:
     description: Generate data with teragen
     params:
