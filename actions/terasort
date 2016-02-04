@@ -8,10 +8,18 @@ OPTIONS=''
 MAPS=`action-get maps`
 REDUCES=`action-get reduces`
 NUMTASKS=`action-get numtasks`
+COMPRESSION=`action-get compression`
 
 OPTIONS="${OPTIONS} -D mapreduce.job.maps=${MAPS}"
 OPTIONS="${OPTIONS} -D mapreduce.job.reduces=${REDUCES}"
 OPTIONS="${OPTIONS} -D mapreduce.job.jvm.numtasks=${NUMTASKS}"
+if [ $COMPRESSION == 'Disable' ] ; then
+        OPTIONS="${OPTIONS} -D mapreduce.map.output.compress=false"
+elif [ $COMPRESSION == 'LocalDefault' ] ; then
+        OPTIONS="${OPTIONS}"
+else
+        OPTIONS="${OPTIONS} -D mapreduce.map.output.compress=true -D mapred.map.output.compress.codec=org.apache.hadoop.io.compress.${COMPRESSION}Codec"
+fi
 
 # create dir to store results
 RUN=`date +%s`
