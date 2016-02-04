@@ -32,7 +32,6 @@ START=`date +%s`
 su ubuntu << EOF
 . /etc/environment
 echo 'running benchmark'
-cd ~
 hadoop jar \${HADOOP_HOME}/share/hadoop/mapreduce/hadoop-*test*.jar mrbench $OPTIONS &> ${RESULT_LOG} 
 EOF
 STOP=`date +%s`
