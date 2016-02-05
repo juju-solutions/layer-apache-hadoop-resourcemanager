@@ -115,31 +115,6 @@ You can also perform a mapreduce benchmark (mrbench) which relies less on HDFS:
           started: 2016-02-04 14:33:41 +0000 UTC
 
 
-## Upgrading
-
-This charm includes the hadoop-upgrade action which will download, untar and
-upgrade the hadoop software to the specified version. This should be used in
-conjunction with the hadoop-pre-upgrade and hadoop-post-upgrade actions on the
-namenode (apache-hadoop-hdfs-master) which stops any hadoop related processes on
-the cluster before allowing the upgrade to proceed.
-
-If different
-versions of hadoop are running on related services, the cluster will not
-function correctly.
-
-The rollback param specifies whether to recreate (overwrite)
-the hadoop software or simply recreate the /usr/lib/hadoop symlink.
-
-Syntax for this action is:
-
-    juju action do datanode/0 hadoop-upgrade version=X.X.X rollback=false
-
-This action will upgrade the unit extended status.
-    You can also get action results with:
-
-    juju action fetch --wait 0 action-id
-
-
 
 ## Monitoring
 
