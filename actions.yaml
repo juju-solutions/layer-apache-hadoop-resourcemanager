@@ -38,7 +38,7 @@ mrbench:
             type: integer
             default: 1
         inputtype:
-            description: type of input to generate
+            description: 'Type of input to generate, one of [ascending, descending, random]'
             type: string
             default: "ascending"
             enum: [ascending,descending,random]
@@ -81,7 +81,22 @@ terasort:
             type: integer
             default: 1
         compression:
-            description: Enable or Disable mapred output (intermediate) compression. LocalDefault will run with your current local hadoop configuration. Default means default hadoop deflate codec
+            description: > Enable or Disable mapred output (intermediate) compression. 
+                        LocalDefault will run with your current local hadoop configuration. 
+                        Default means default hadoop deflate codec.
+                        One of: Gzip, BZip2, Snappy, Lzo, Default, Disable, LocalDefault
+                        These are all case sensitive.
             type: string
             default: "LocalDefault"
             enum: [Gzip, BZip2, Snappy, Lzo, Default, Disable, LocalDefault]
+testaction:
+    description: description here
+    params: 
+        url:
+            description: location of jar
+            type: string
+            default: ""
+        jsonblob:
+            description: test
+            type: string
+            default: ""
