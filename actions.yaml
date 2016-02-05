@@ -81,7 +81,8 @@ terasort:
             type: integer
             default: 1
         compression:
-            description: > Enable or Disable mapred output (intermediate) compression. 
+            description: > 
+                        Enable or Disable mapred output (intermediate) compression. 
                         LocalDefault will run with your current local hadoop configuration. 
                         Default means default hadoop deflate codec.
                         One of: Gzip, BZip2, Snappy, Lzo, Default, Disable, LocalDefault
