@@ -90,14 +90,3 @@ terasort:
             type: string
             default: "LocalDefault"
             enum: [Gzip, BZip2, Snappy, Lzo, Default, Disable, LocalDefault]
-testaction:
-    description: description here
-    params: 
-        url:
-            description: location of jar
-            type: string
-            default: ""
-        jsonblob:
-            description: test
-            type: string
-            default: ""
