@@ -38,7 +38,8 @@ def blockedhdfs(hdfs):
 @when('resourcemanager.configured')
 @when_none('nodemanager.related', 'namenode.related')
 def blockedboth():
-    hookenv.status_set('blocked', 'Waiting for relation to NodeManager and HDFS')
+    hookenv.status_set('blocked',
+                       'Waiting for relation to NodeManager and HDFS')
 
 
 @when('resourcemanager.configured')
@@ -57,7 +58,8 @@ def send_info(nodemanager):
     hs_http = hadoop.dist_config.port('jh_webapp_http')
     hs_ipc = hadoop.dist_config.port('jobhistory')
 
-    utils.update_kv_hosts({node['ip']: node['host'] for node in nodemanager.nodes()})
+    utils.update_kv_hosts({node['ip']: node['host']
+                           for node in nodemanager.nodes()})
     utils.manage_etc_hosts()
 
     nodemanager.send_spec(hadoop.spec())
@@ -127,7 +129,7 @@ def hdfs_departed():
 def unregister_nodemanager(nodemanager):
     hadoop = get_hadoop_base()
     yarn = YARN(hadoop)
-    nodes_leaving = nodemanager.nodes()  # only returns nodes in "leaving" state
+    nodes_leaving = nodemanager.nodes()
 
     slaves = unitdata.kv().get('resourcemanager.slaves', [])
     slaves_leaving = [node['host'] for node in nodes_leaving]
