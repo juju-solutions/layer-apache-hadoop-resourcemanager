@@ -22,34 +22,34 @@ def configure_resourcemanager():
 
 
 @when('resourcemanager.configured')
-@when('namenode.related')
-@when_not('nodemanager.related')
+@when('namenode.joined')
+@when_not('nodemanager.joined')
 def blockednodemanager(hdfs):
     hookenv.status_set('blocked', 'Waiting for relation to NodeManager')
 
 
 @when('resourcemanager.configured')
-@when('nodemanager.related')
-@when_not('namenode.related')
+@when('nodemanager.joined')
+@when_not('namenode.joined')
 def blockedhdfs(hdfs):
     hookenv.status_set('blocked', 'Waiting for relation to HDFS')
 
 
 @when('resourcemanager.configured')
-@when_none('nodemanager.related', 'namenode.related')
+@when_none('nodemanager.joined', 'namenode.joined')
 def blockedboth():
     hookenv.status_set('blocked',
                        'Waiting for relation to NodeManager and HDFS')
 
 
 @when('resourcemanager.configured')
-@when('nodemanager.related', 'namenode.related')
+@when('nodemanager.joined', 'namenode.joined')
 @when_not('namenode.ready')
 def waitinghdfs(nodemanager, hdfs):
     hookenv.status_set('waiting', 'Waiting for HDFS')
 
 
-@when('resourcemanager.started', 'nodemanager.related')
+@when('resourcemanager.started', 'nodemanager.joined')
 def send_info(nodemanager):
     hadoop = get_hadoop_base()
     yarn = YARN(hadoop)
