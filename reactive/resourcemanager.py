@@ -148,6 +148,6 @@ def unregister_nodemanager(nodemanager):
     nodemanager.dismiss()
 
 
-@when('benchmark.related')
+@when('benchmark.joined')
 def register_benchmarks(benchmark):
     benchmark.register('teragen', 'terasort')
