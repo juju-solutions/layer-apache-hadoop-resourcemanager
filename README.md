@@ -29,8 +29,19 @@ included in the bigdata bundles linked above:
 
 ## Benchmarking
 
-You can perform a terasort benchmark, in order to gauge performance of your environment:
-        
+This charm provides several benchmarks to gauge the performance of your
+environment.
+
+The easiest way to run the benchmarks on this service is to relate it to the
+[Benchmark GUI][].  You will likely also want to relate it to the
+[Benchmark Collector][] to have machine-level information collected during the
+benchmark, for a more complete picture of how the machine performed.
+
+[Benchmark GUI]: https://jujucharms.com/benchmark-gui/
+[Benchmark Collector]: https://jujucharms.com/benchmark-collector/
+
+However, each benchmark is also an action that can be called manually:
+
         $ juju action do resourcemanager/0 terasort
         Action queued with id: cbd981e8-3400-4c8f-8df1-c39c55a7eae6
         $ juju action fetch --wait 0 cbd981e8-3400-4c8f-8df1-c39c55a7eae6
@@ -69,50 +80,7 @@ You can perform a terasort benchmark, in order to gauge performance of your envi
         timing:
           completed: 2015-05-28 20:55:50 +0000 UTC
           enqueued: 2015-05-28 20:53:41 +0000 UTC
-          started: 2015-05-28 20:53:44 +0000 UTC 
-
-You can also perform a mapreduce benchmark (mrbench) which relies less on HDFS:
-        
-        $ juju action do apache-hadoop-resourcemanager/0 mrbench
-        Action queued with id: b64bc0ea-60af-4f28-8712-a1927926658a
-        $ juju action fetch --wait 0 b64bc0ea-60af-4f28-8712-a1927926658a
-        results:
-          meta:
-            composite:
-              direction: asc
-              units: secs
-              value: "77"
-            start: 2016-02-04T14:33:48Z
-            stop: 2016-02-04T14:35:06Z
-          results:
-            raw: '{"Map input records": "4", "Combine input records": "0", "Total time spent
-              by all maps in occupied slots (ms)": "147048", "Launched reduce tasks": "1",
-              "Combine output records": "0", "Map output materialized bytes": "84", "FILE:
-              Number of bytes written": "587281", "Spilled Records": "8", "FILE: Number of
-              read operations": "0", "Map output records": "4", "Total megabyte-seconds taken
-              by all map tasks": "150577152", "FILE: Number of bytes read": "32", "HDFS: Number
-              of write operations": "2", "CPU time spent (ms)": "4790", "HDFS: Number of read
-              operations": "15", "HDFS: Number of bytes read": "501", "WRONG_MAP": "0", "Input
-              split bytes": "493", "HDFS: Number of large read operations": "0", "IO_ERROR":
-              "0", "Reduce input groups": "1", "Bytes Written": "12", "GC time elapsed (ms)":
-              "2717", "Physical memory (bytes) snapshot": "965840896", "CONNECTION": "0",
-              "WRONG_LENGTH": "0", "HDFS: Number of bytes written": "12", "Virtual memory
-              (bytes) snapshot": "9412210688", "Total vcore-seconds taken by all map tasks":
-              "147048", "Total time spent by all map tasks (ms)": "147048", "Data-local map
-              tasks": "4", "Bytes Read": "8", "Reduce input records": "4", "FILE: Number of
-              large read operations": "0", "Total committed heap usage (bytes)": "696057856",
-              "Shuffled Maps ": "4", "Total megabyte-seconds taken by all reduce tasks": "10531840",
-              "WRONG_REDUCE": "0", "Failed Shuffles": "0", "Reduce output records": "4", "FILE:
-              Number of write operations": "0", "Launched map tasks": "4", "Reduce shuffle
-              bytes": "84", "BAD_ID": "0", "Merged Map outputs": "4", "Total vcore-seconds
-              taken by all reduce tasks": "10285", "Map output bytes": "20", "Total time spent
-              by all reduce tasks (ms)": "10285", "Total time spent by all reduces in occupied
-              slots (ms)": "10285"}'
-        status: completed
-        timing:
-          completed: 2016-02-04 14:35:07 +0000 UTC
-          enqueued: 2016-02-04 14:33:39 +0000 UTC
-          started: 2016-02-04 14:33:41 +0000 UTC
+          started: 2015-05-28 20:53:44 +0000 UTC
 
 
 
