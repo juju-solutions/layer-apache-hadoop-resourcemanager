@@ -1,6 +1,6 @@
 # pylint: disable=unused-argument
 from charms.reactive import when, when_not, set_state, remove_state, when_none
-from charms.hadoop import get_hadoop_base
+from charms.layer.hadoop_base import get_hadoop_base
 from charms.reactive.helpers import data_changed
 from jujubigdata.handlers import YARN
 from jujubigdata import utils
