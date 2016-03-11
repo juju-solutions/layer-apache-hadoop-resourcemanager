@@ -1,4 +1,10 @@
-includes: ['layer:hadoop-base', 'interface:dfs', 'interface:mapred', 'interface:mapred-slave', 'interface:benchmark']
+includes:
+  - 'layer:hadoop-base'
+  - 'layer:hadoop-ganglia'
+  - 'interface:dfs'
+  - 'interface:mapred'
+  - 'interface:mapred-slave'
+  - 'interface:benchmark'
 options:
   hadoop-base:
     ports:
