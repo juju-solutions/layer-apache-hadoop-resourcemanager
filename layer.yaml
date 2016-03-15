@@ -1,3 +1,4 @@
+repo: git@github.com:juju-solutions/layer-apache-hadoop-resourcemanager.git
 includes:
   - 'layer:hadoop-base'
   - 'layer:hadoop-ganglia'
