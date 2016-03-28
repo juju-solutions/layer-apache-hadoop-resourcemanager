@@ -8,6 +8,7 @@ This charm deploys a node running the ResourceManager component of
 [Apache Hadoop 2.4.1](http://hadoop.apache.org/docs/r2.4.1/),
 which manages the computation resources and job execution for the platform.
 
+
 ## Usage
 
 This charm is intended to be deployed via one of the
@@ -19,12 +20,40 @@ For example:
 This will deploy the Apache Hadoop platform with Apache Hive available to
 perform SQL-like queries against your data.
 
-You can also manually load and run map-reduce jobs via the plugin charm
-included in the bigdata bundles linked above:
+You can also manually load and run map-reduce jobs:
 
-    juju scp my-job.jar plugin/0:
-    juju ssh plugin/0
+    juju scp my-job.jar resourcemanager/0:
+    juju ssh resourcemanager/0
     hadoop jar my-job.jar
+
+
+## Status and Smoke Test
+
+The services provide extended status reporting to indicate when they are ready:
+
+    juju status --format=tabular
+
+This is particularly useful when combined with `watch` to track the on-going
+progress of the deployment:
+
+    watch -n 0.5 juju status --format=tabular
+
+The message for each unit will provide information about that unit's state.
+Once they all indicate that they are ready, you can perform a "smoke test"
+to verify that Yarn is working as expected using the built-in `smoke-test`
+action:
+
+    juju action do resourcemanager/0 smoke-test
+
+After a few seconds or so, you can check the results of the smoke test:
+
+    juju action status
+
+You will see `status: completed` if the smoke test was successful, or
+`status: failed` if it was not.  You can get more information on why it failed
+via:
+
+    juju action fetch <action-id>
 
 
 ## Benchmarking

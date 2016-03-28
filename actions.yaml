@@ -1,3 +1,6 @@
+smoke-test:
+  description: >
+    Verify that YARN is working as expected by running a small (1MB) terasort.
 start-yarn:
     description: All of the YARN processes can be started with this Juju action.
 stop-yarn:
@@ -71,9 +74,9 @@ terasort:
             type: integer
             default: 1
         compression:
-            description: > 
-                        Enable or Disable mapred output (intermediate) compression. 
-                        LocalDefault will run with your current local hadoop configuration. 
+            description: >
+                        Enable or Disable mapred output (intermediate) compression.
+                        LocalDefault will run with your current local hadoop configuration.
                         Default means default hadoop deflate codec.
                         One of: Gzip, BZip2, Snappy, Lzo, Default, Disable, LocalDefault
                         These are all case sensitive.
