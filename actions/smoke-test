@@ -6,15 +6,15 @@ if ! charms.reactive is_state 'resourcemanager.ready'; then
     exit
 fi
 
-IN_DIR=`action-get indir`
-OUT_DIR=`action-get outdir`
-SIZE=`action-get size`
+IN_DIR='smoke_test_in'
+OUT_DIR='smoke_test_out'
+SIZE=10000
 OPTIONS=''
 
-MAPS=`action-get maps`
-REDUCES=`action-get reduces`
-NUMTASKS=`action-get numtasks`
-COMPRESSION=`action-get compression`
+MAPS=1
+REDUCES=1
+NUMTASKS=1
+COMPRESSION='LocalDefault'
 
 OPTIONS="${OPTIONS} -D mapreduce.job.maps=${MAPS}"
 OPTIONS="${OPTIONS} -D mapreduce.job.reduces=${REDUCES}"
@@ -30,7 +30,7 @@ fi
 # create dir to store results
 RUN=`date +%s`
 RESULT_DIR=/opt/terasort-results
-RESULT_LOG=${RESULT_DIR}/${RUN}.log
+RESULT_LOG=${RESULT_DIR}/${RUN}.$$.log
 mkdir -p ${RESULT_DIR}
 chown -R ubuntu:ubuntu ${RESULT_DIR}
 
@@ -44,7 +44,6 @@ if hadoop fs -stat ${OUT_DIR} &> /dev/null; then
 fi
 EOF
 
-benchmark-start
 START=`date +%s`
 # NB: Escaped vars in the block below (e.g., \${HADOOP_HOME}) come from
 # /etc/environment while non-escaped vars (e.g., ${IN_DIR}) are parameterized
@@ -57,8 +56,9 @@ echo 'sorting data'
 hadoop jar \${HADOOP_HOME}/share/hadoop/mapreduce/hadoop-mapreduce-examples*.jar terasort ${OPTIONS} ${IN_DIR} ${OUT_DIR} &> ${RESULT_LOG}
 EOF
 STOP=`date +%s`
-benchmark-finish
 
-`cat ${RESULT_LOG} | $CHARM_DIR/actions/parseTerasort.py`
+if ! grep -q 'Bytes Written=1000000' ${RESULT_LOG}; then
+    action-fail 'smoke-test failed'
+    action-set log="$(cat ${RESULT_LOG})"
+fi
 DURATION=`expr $STOP - $START`
-benchmark-composite "${DURATION}" 'secs' 'asc'
