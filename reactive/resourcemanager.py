@@ -65,7 +65,7 @@ def send_info(nodemanager):
     nodemanager.send_spec(hadoop.spec())
     nodemanager.send_resourcemanagers([local_hostname])
     nodemanager.send_ports(port, hs_http, hs_ipc)
-    nodemanager.send_ssh_key(utils.get_ssh_key('hdfs'))
+    nodemanager.send_ssh_key(utils.get_ssh_key('yarn'))
     nodemanager.send_hosts_map(utils.get_kv_hosts())
 
     slaves = [node['host'] for node in nodemanager.nodes()]
