@@ -1,0 +1,57 @@
+#!/bin/bash
+set -e
+
+if ! charms.reactive is_state 'resourcemanager.ready'; then
+    action-fail 'ResourceManager not yet ready'
+    exit
+fi
+
+action_id=$JUJU_ACTION_UUID
+job="$(action-get job)"
+job_args="$(action-get job-args)"
+compression="$(action-get class)"
+extra_params="$(action-get extra-params)"
+cron="$(action-get cron)"
+
+submit_args=''
+if [ $compression == 'Disable' ] ; then
+    submit_args="${submit_args} -D mapreduce.map.output.compress=false"
+elif [ $compression != 'LocalDefault' ] ; then
+    submit_args="${submit_args} -Dmapreduce.map.output.compress=true"
+    submit_args="${submit_args} -Dmapred.map.output.compress.codec=org.apache.hadoop.io.compress.${compression}Codec"
+fi
+if [[ -n "$extra_params" ]]; then
+    submit_args="$submit_args $extra_params"
+fi
+
+is_url=<<EOP
+import sys
+from urllib.parse import urlparse
+sys.exit(urlparse('$job').scheme == '')
+EOP
+
+if python3 -c "$is_url"; then
+    if [[ -z "$cron" ]]; then
+        jobs_dir=/tmp/job-jars
+    else
+        jobs_dir=/home/ubuntu/job-jars
+    fi
+    mkdir -p $jobs_dir
+    wget -O $jobs_dir/${action_id}.jar $job
+    job=$jobs_dir/${action_id}.jar
+fi
+
+submit_args="$submit_args $job"
+
+job_code=". /etc/environment ; yarn jar $submit_args $job_args"
+action-set job-code="$job_code"
+
+if [[ -z "$cron" ]]; then
+    su ubuntu -c "$job_code" &
+else
+    juju-log "Scheduling action with ID $action_id"
+    action-set action-id="$action_id"
+    job_line="$cron $job_code  # mapreduce job: $action_id"
+    crontab -lu ubuntu > /dev/null || echo -n | crontab -u ubuntu -
+    (crontab -lu ubuntu; echo "$job_line") | crontab -u ubuntu -
+fi

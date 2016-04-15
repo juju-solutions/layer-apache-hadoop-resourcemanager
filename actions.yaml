@@ -83,3 +83,65 @@ terasort:
             type: string
             default: "LocalDefault"
             enum: [Gzip, BZip2, Snappy, Lzo, Default, Disable, LocalDefault]
+submit:
+    description: Submit a job to Yarn.
+    required: ['job']
+    params:
+        job:
+            description: >
+                URL to a JAR to run.  This will be fetched with `wget` and
+                passed in to Yarn.  One-off jobs will have their JAR file
+                stored in /tmp/job-jars while scheduled jobs (if cron is
+                given) will have their JAR stored in /home/ubuntu/job-jars.
+                If this action is used heavily for one-off jobs, you should
+                periodically call clean-job-files to clean up the files under
+                /tmp/job-jars.
+            type: string
+        job-args:
+            description: Arguments for the job.
+            type: string
+        compression:
+            description: >
+                        Enable or Disable mapred output (intermediate) compression.
+                        LocalDefault will run with your current local hadoop configuration.
+                        Default means default hadoop deflate codec.
+                        One of: Gzip, BZip2, Snappy, Lzo, Default, Disable, LocalDefault
+                        These are all case sensitive.
+            type: string
+            default: "LocalDefault"
+            enum: [Gzip, BZip2, Snappy, Lzo, Default, Disable, LocalDefault]
+        extra-params:
+            description: >
+                Additional params to pass to `yarn jar`.
+                For example: "-Dmy.prop=foo -Dother.prop=bar"
+            type: string
+        cron:
+            description: >
+                Schedule the job to be run periodically, according to the
+                given cron rule.  For example: "*/5 * * * *" will run the
+                job every 5 minutes.  Note: when submitting this action via
+                the Juju CLI, you must use `--string-args` or Juju will attempt
+                to parse and then reject the value for this param.
+            type: string
+list-jobs:
+    description: List scheduled periodic jobs.
+remove-job:
+    description: Remove a job previously scheduled for repeated execution.
+    required: ['action-id']
+    params:
+        action-id:
+            type: string
+            description: The ID returned by the action that scheduled the job.
+clean-job-files:
+    description: >
+        Clean up downloaded JARs for jobs that haven't been accessed in a
+        certain number of days.  Note that JARs for jobs scheduled for
+        repeated runs via cron are not removed by this; instead, they are
+        removed when the job is removed from the schedule using remove-job.
+    params:
+        days:
+            description: >
+                The access time filter for the JARs, which will be passed
+                to `find -atime`.
+            type: string
+            default: '+1'

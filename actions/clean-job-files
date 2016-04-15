@@ -1,0 +1,6 @@
+#!/bin/bash
+set -e
+
+count=$((find /tmp/job-jars -atime $(action-get days) -print || true) | wc -l)
+find /tmp/job-jars -atime $(action-get days) -delete || true
+action-set deleted=$count
