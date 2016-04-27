@@ -5,6 +5,12 @@ if ! charms.reactive is_state 'resourcemanager.ready'; then
     exit
 fi
 
-. /etc/environment
-cd ${HADOOP_HOME}/sbin
-su yarn -c "./start-yarn.sh"
+if command -v systemctl >/dev/null; then
+  # assume systemd
+  systemctl start resourcemanager
+  systemctl start historyserver
+elif command -v service >/dev/null; then
+  # assume upstart
+  service resourcemanager start
+  service historyserver start
+fi
