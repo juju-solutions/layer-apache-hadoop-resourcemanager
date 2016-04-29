@@ -58,8 +58,7 @@ def send_info(nodemanager):
     hs_http = hadoop.dist_config.port('jh_webapp_http')
     hs_ipc = hadoop.dist_config.port('jobhistory')
 
-    utils.update_kv_hosts({node['ip']: node['host']
-                           for node in nodemanager.nodes()})
+    utils.update_kv_hosts(nodemanager.hosts_map())
     utils.manage_etc_hosts()
 
     nodemanager.send_spec(hadoop.spec())
@@ -68,7 +67,7 @@ def send_info(nodemanager):
     nodemanager.send_ssh_key(utils.get_ssh_key('yarn'))
     nodemanager.send_hosts_map(utils.get_kv_hosts())
 
-    slaves = [node['host'] for node in nodemanager.nodes()]
+    slaves = nodemanager.nodes()
     if data_changed('resourcemanager.slaves', slaves):
         unitdata.kv().set('resourcemanager.slaves', slaves)
         yarn.register_slaves(slaves)
@@ -129,10 +128,9 @@ def hdfs_departed():
 def unregister_nodemanager(nodemanager):
     hadoop = get_hadoop_base()
     yarn = YARN(hadoop)
-    nodes_leaving = nodemanager.nodes()
 
     slaves = unitdata.kv().get('resourcemanager.slaves', [])
-    slaves_leaving = [node['host'] for node in nodes_leaving]
+    slaves_leaving = nodemanager.nodes()
     hookenv.log('Slaves leaving: {}'.format(slaves_leaving))
 
     slaves_remaining = list(set(slaves) - set(slaves_leaving))
