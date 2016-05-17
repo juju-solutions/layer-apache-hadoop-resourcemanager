@@ -1,0 +1,10 @@
+#!/bin/bash
+set -e
+
+action_id="$(action-get action-id)"
+if crontab -lu ubuntu | grep -q "$action_id"; then
+    crontab -lu ubuntu | grep -v "$action_id" | crontab -u ubuntu -
+    rm -f /home/ubuntu/job-jars/${action_id}.jar
+else
+    action-fail "Job not found: $action_id"
+fi
