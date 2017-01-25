@@ -19,3 +19,4 @@ requires:
     interface: dfs
   nodemanager:
     interface: mapred-slave
+series: ['xenial', 'trusty']
